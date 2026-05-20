@@ -117,6 +117,8 @@
   }
   .paper .indent-1 { padding-left: 14px; display: block; margin: 2px 0; }
   .paper .indent-2 { padding-left: 28px; display: block; margin: 2px 0; }
+  .paper .indent-3 { padding-left: 42px; display: block; margin: 2px 0; }
+  .paper .indent-4 { padding-left: 56px; display: block; margin: 2px 0; }
   .paper .heading-line {
     background: #d8d3c4;
     padding: 6px 10px;
@@ -135,8 +137,24 @@
     padding-left: 0;
   }
   .paper div.has-number {
-    text-indent: -2.5em;
-    padding-left: 2.5em;
+    text-indent: -2em;
+    padding-left: 2em;
+  }
+  .paper div.indent-1.has-number {
+    text-indent: -2em;
+    padding-left: calc(14px + 2em);
+  }
+  .paper div.indent-2.has-number {
+    text-indent: -2em;
+    padding-left: calc(28px + 2em);
+  }
+  .paper div.indent-3.has-number {
+    text-indent: -2em;
+    padding-left: calc(42px + 2em);
+  }
+  .paper div.indent-4.has-number {
+    text-indent: -2em;
+    padding-left: calc(56px + 2em);
   }
 
   .page-footer {
@@ -307,6 +325,16 @@
   }
   .gui-editor div.indent-2-block {
     margin-left: 28px;
+    padding-left: 6px;
+    border-left: 2px solid #ece5d3;
+  }
+  .gui-editor div.indent-3-block {
+    margin-left: 42px;
+    padding-left: 6px;
+    border-left: 2px solid #ece5d3;
+  }
+  .gui-editor div.indent-4-block {
+    margin-left: 56px;
     padding-left: 6px;
     border-left: 2px solid #ece5d3;
   }
@@ -659,6 +687,8 @@
   const PAGE_BREAK_TOKEN = '<<<PAGEBREAK>>>';
   const IND1_PREFIX = '#I1# ';
   const IND2_PREFIX = '#I2# ';
+  const IND3_PREFIX = '#I3# ';
+  const IND4_PREFIX = '#I4# ';
   const HEADING_PREFIX = '#H# ';
   const BOLD_START = '**';
   const BOLD_END = '**';
@@ -759,13 +789,21 @@
         cls = 'heading-block'; 
         content = content.slice(HEADING_PREFIX.length); 
       }
-      else if (content.startsWith(IND1_PREFIX)){ 
-        cls = 'indent-1-block'; 
-        content = content.slice(IND1_PREFIX.length); 
+      else if (content.startsWith(IND4_PREFIX)){ 
+        cls = 'indent-4-block'; 
+        content = content.slice(IND4_PREFIX.length); 
+      }
+      else if (content.startsWith(IND3_PREFIX)){ 
+        cls = 'indent-3-block'; 
+        content = content.slice(IND3_PREFIX.length); 
       }
       else if (content.startsWith(IND2_PREFIX)){ 
         cls = 'indent-2-block'; 
         content = content.slice(IND2_PREFIX.length); 
+      }
+      else if (content.startsWith(IND1_PREFIX)){ 
+        cls = 'indent-1-block'; 
+        content = content.slice(IND1_PREFIX.length); 
       }
       const escaped = inlineMarks(escapeHtml(content));
       const inner = escaped || '<br>';
@@ -814,8 +852,10 @@
         if (child.tagName === 'DIV'){
           let prefix = '';
           if (child.classList.contains('heading-block')) prefix = HEADING_PREFIX;
-          else if (child.classList.contains('indent-1-block')) prefix = IND1_PREFIX;
+          else if (child.classList.contains('indent-4-block')) prefix = IND4_PREFIX;
+          else if (child.classList.contains('indent-3-block')) prefix = IND3_PREFIX;
           else if (child.classList.contains('indent-2-block')) prefix = IND2_PREFIX;
+          else if (child.classList.contains('indent-1-block')) prefix = IND1_PREFIX;
           let txt = getInline(child);
           lines.push(prefix + txt);
           continue;
@@ -846,13 +886,21 @@
         isHeading = true; 
         content = content.slice(HEADING_PREFIX.length); 
       }
-      else if (content.startsWith(IND1_PREFIX)){ 
-        cls = 'indent-1'; 
-        content = content.slice(IND1_PREFIX.length); 
+      else if (content.startsWith(IND4_PREFIX)){ 
+        cls = 'indent-4'; 
+        content = content.slice(IND4_PREFIX.length); 
+      }
+      else if (content.startsWith(IND3_PREFIX)){ 
+        cls = 'indent-3'; 
+        content = content.slice(IND3_PREFIX.length); 
       }
       else if (content.startsWith(IND2_PREFIX)){ 
         cls = 'indent-2'; 
         content = content.slice(IND2_PREFIX.length); 
+      }
+      else if (content.startsWith(IND1_PREFIX)){ 
+        cls = 'indent-1'; 
+        content = content.slice(IND1_PREFIX.length); 
       }
 
       // 番号で始まるかチェック(全角数字+ピリオド、括弧数字、丸数字、イロハ)
@@ -1047,7 +1095,7 @@
   }
 
   function setBlockClass(block, newClass){
-    block.classList.remove('indent-1-block','indent-2-block');
+    block.classList.remove('indent-1-block','indent-2-block','indent-3-block','indent-4-block');
     if (newClass) block.classList.add(newClass);
   }
 
@@ -1307,7 +1355,7 @@
       state.counters.zenkaku++;
     } else if (kind === 'paren'){
       state.counters.paren++;
-      prefix = '(' + state.counters.paren + ') '; // 半角スペース
+      prefix = '（' + state.counters.paren + '） '; // 全角カッコ+半角スペース
     } else if (kind === 'maru'){
       prefix = MARU[state.counters.maru % MARU.length] + ' '; // 半角スペース
       state.counters.maru++;
@@ -1343,8 +1391,10 @@
       if (b) blocks.push(b);
     }
     blocks.forEach(b => {
-      if (b.classList.contains('indent-1-block')) setBlockClass(b, 'indent-2-block');
-      else if (!b.classList.contains('indent-2-block')){
+      if (b.classList.contains('indent-3-block')) setBlockClass(b, 'indent-4-block');
+      else if (b.classList.contains('indent-2-block')) setBlockClass(b, 'indent-3-block');
+      else if (b.classList.contains('indent-1-block')) setBlockClass(b, 'indent-2-block');
+      else if (!b.classList.contains('indent-4-block')){
         setBlockClass(b, 'indent-1-block');
       }
     });
@@ -1356,7 +1406,9 @@
       if (b) blocks.push(b);
     }
     blocks.forEach(b => {
-      if (b.classList.contains('indent-2-block')) setBlockClass(b, 'indent-1-block');
+      if (b.classList.contains('indent-4-block')) setBlockClass(b, 'indent-3-block');
+      else if (b.classList.contains('indent-3-block')) setBlockClass(b, 'indent-2-block');
+      else if (b.classList.contains('indent-2-block')) setBlockClass(b, 'indent-1-block');
       else if (b.classList.contains('indent-1-block')) setBlockClass(b, '');
     });
   }
