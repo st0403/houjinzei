@@ -117,6 +117,18 @@
   }
   .paper .indent-1 { padding-left: 14px; display: block; margin: 2px 0; }
   .paper .indent-2 { padding-left: 28px; display: block; margin: 2px 0; }
+  .paper .heading-line {
+    background: #d8d3c4;
+    padding: 6px 10px;
+    font-weight: 500;
+    font-size: 17px;
+    margin: 10px 0 4px;
+    border-radius: 3px;
+    display: block;
+  }
+  .paper .bold-text {
+    font-weight: 700;
+  }
   .paper div {
     /* 番号付き行の折り返し対応 */
     text-indent: 0;
@@ -298,6 +310,14 @@
     padding-left: 6px;
     border-left: 2px solid #ece5d3;
   }
+  .gui-editor div.heading-block {
+    background: #d8d3c4;
+    padding: 6px 10px;
+    font-weight: 500;
+    font-size: 16px;
+    margin: 10px 0 4px;
+    border-radius: 3px;
+  }
 
   .gui-editor .mark-kw {
     background: #ffd6d2;
@@ -314,6 +334,9 @@
     border-radius: 4px;
     border: 1px dashed #c2185b;
     margin: 2px 0;
+  }
+  .gui-editor .mark-bold {
+    font-weight: 700;
   }
   .gui-editor .page-break {
     display: block;
@@ -510,6 +533,8 @@
     <div class="help">
       <strong>編集機能</strong><br>
       ■ <strong>マスク</strong>:選択 → 「キーワード」「文ごと」<br>
+      ■ <strong>見出し</strong>:行を選択 → 「📋 見出し」で灰色背景・大きめ文字<br>
+      ■ <strong>太字</strong>:選択 → 「B 太字」で太字に / 「太字解除」で戻す<br>
       ■ <strong>番号挿入</strong>:行頭にカーソル → 「１」「(1)」「①」「イ」のいずれか。連続で押すと次の番号に進みます<br>
       ■ <strong>インデント</strong>:行を選択 → 「→」「←」<br>
       ■ <strong>改ページ</strong>:カーソル位置 → 「改ページ」
@@ -534,6 +559,10 @@
         <button class="btn-mask-keyword" id="btn-mask-kw">■ キーワード</button>
         <button class="btn-mask-sentence" id="btn-mask-sent">▮ 文ごと</button>
         <button id="btn-unmask">マスク解除</button>
+        <span class="group-divider"></span>
+        <button class="btn-struct" id="btn-heading" title="灰色背景の見出しに変換">📋 見出し</button>
+        <button class="btn-struct" id="btn-bold" title="選択範囲を太字に"><strong>B</strong> 太字</button>
+        <button class="btn-struct" id="btn-unbold" title="太字を解除">太字解除</button>
         <span class="group-divider"></span>
         <button class="btn-struct" id="btn-num-zenkaku" title="１２３…を順に挿入">１</button>
         <button class="btn-struct" id="btn-num-paren" title="(1)(2)(3)…を順に挿入">(1)</button>
@@ -630,6 +659,9 @@
   const PAGE_BREAK_TOKEN = '<<<PAGEBREAK>>>';
   const IND1_PREFIX = '#I1# ';
   const IND2_PREFIX = '#I2# ';
+  const HEADING_PREFIX = '#H# ';
+  const BOLD_START = '**';
+  const BOLD_END = '**';
 
   const state = {
     items: [],
@@ -707,6 +739,7 @@
   function inlineMarks(s){
     s = s.replace(/\{\{([\s\S]*?)\}\}/g, (m, inner) => '<span class="mark-sent" data-type="sent">' + inner + '</span>');
     s = s.replace(/\[\[([^\[\]\n]+?)\]\]/g, (m, inner) => '<span class="mark-kw" data-type="kw">' + inner + '</span>');
+    s = s.replace(/\*\*([^\*\n]+?)\*\*/g, (m, inner) => '<span class="mark-bold" data-type="bold">' + inner + '</span>');
     return s;
   }
 
@@ -722,8 +755,18 @@
       }
       let cls = '';
       let content = line;
-      if (content.startsWith(IND1_PREFIX)){ cls = 'indent-1-block'; content = content.slice(IND1_PREFIX.length); }
-      else if (content.startsWith(IND2_PREFIX)){ cls = 'indent-2-block'; content = content.slice(IND2_PREFIX.length); }
+      if (content.startsWith(HEADING_PREFIX)){ 
+        cls = 'heading-block'; 
+        content = content.slice(HEADING_PREFIX.length); 
+      }
+      else if (content.startsWith(IND1_PREFIX)){ 
+        cls = 'indent-1-block'; 
+        content = content.slice(IND1_PREFIX.length); 
+      }
+      else if (content.startsWith(IND2_PREFIX)){ 
+        cls = 'indent-2-block'; 
+        content = content.slice(IND2_PREFIX.length); 
+      }
       const escaped = inlineMarks(escapeHtml(content));
       const inner = escaped || '<br>';
       if (cls){
@@ -752,6 +795,10 @@
             out += '{{' + n.textContent + '}}';
             return;
           }
+          if (n.classList && n.classList.contains('mark-bold')){
+            out += '**' + n.textContent + '**';
+            return;
+          }
           for (const c of n.childNodes) walk(c);
         }
       }
@@ -766,7 +813,8 @@
         }
         if (child.tagName === 'DIV'){
           let prefix = '';
-          if (child.classList.contains('indent-1-block')) prefix = IND1_PREFIX;
+          if (child.classList.contains('heading-block')) prefix = HEADING_PREFIX;
+          else if (child.classList.contains('indent-1-block')) prefix = IND1_PREFIX;
           else if (child.classList.contains('indent-2-block')) prefix = IND2_PREFIX;
           let txt = getInline(child);
           lines.push(prefix + txt);
@@ -791,14 +839,33 @@
     let html = '';
     for (const line of lines){
       let cls = '';
+      let isHeading = false;
       let content = line;
-      if (content.startsWith(IND1_PREFIX)){ cls = 'indent-1'; content = content.slice(IND1_PREFIX.length); }
-      else if (content.startsWith(IND2_PREFIX)){ cls = 'indent-2'; content = content.slice(IND2_PREFIX.length); }
+      
+      if (content.startsWith(HEADING_PREFIX)){ 
+        isHeading = true; 
+        content = content.slice(HEADING_PREFIX.length); 
+      }
+      else if (content.startsWith(IND1_PREFIX)){ 
+        cls = 'indent-1'; 
+        content = content.slice(IND1_PREFIX.length); 
+      }
+      else if (content.startsWith(IND2_PREFIX)){ 
+        cls = 'indent-2'; 
+        content = content.slice(IND2_PREFIX.length); 
+      }
 
       // 番号で始まるかチェック(全角数字+ピリオド、括弧数字、丸数字、イロハ)
       const hasNumber = /^([１-９][0-9]*\.|[(（][0-9]+[)）]|[①-⑳]|[イロハニホヘトチリヌルヲワカヨタレソツネナラムウヰノオクヤマケフコエテアサキユメミシヱヒモセス])\s/.test(content);
 
       let s = escapeHtml(content);
+      
+      // 太字マーカー
+      s = s.replace(/\*\*([^\*\n]+?)\*\*/g, (m, inner) => {
+        return '<span class="bold-text">' + inner + '</span>';
+      });
+      
+      // マスク
       s = s.replace(/\{\{([\s\S]*?)\}\}/g, (m, inner) => {
         const txt = inner.trim();
         if (mode === 'none' || mode === 'keyword') {
@@ -813,14 +880,18 @@
         return '<span class="mask" data-mask="1">' + inner + '</span>';
       });
 
-      let divClass = cls;
-      if (hasNumber && !cls) divClass = 'has-number';
-      else if (hasNumber && cls) divClass = cls + ' has-number';
-
-      if (divClass){
-        html += '<div class="' + divClass + '">' + (s || '&nbsp;') + '</div>';
+      if (isHeading){
+        html += '<div class="heading-line">' + (s || '&nbsp;') + '</div>';
       } else {
-        html += '<div>' + (s || '&nbsp;') + '</div>';
+        let divClass = cls;
+        if (hasNumber && !cls) divClass = 'has-number';
+        else if (hasNumber && cls) divClass = cls + ' has-number';
+
+        if (divClass){
+          html += '<div class="' + divClass + '">' + (s || '&nbsp;') + '</div>';
+        } else {
+          html += '<div>' + (s || '&nbsp;') + '</div>';
+        }
       }
     }
     return html;
@@ -1053,6 +1124,108 @@
     parent.normalize();
   }
 
+  // 見出しボタン:現在のブロックをheading-blockにする
+  function toggleHeading(){
+    const blocks = getSelectedBlocks();
+    if (blocks.length === 0){
+      const b = getCurrentBlock();
+      if (b) blocks.push(b);
+    }
+    if (blocks.length === 0){
+      alert('本文エリアにカーソルを置いてください。');
+      return;
+    }
+    blocks.forEach(b => {
+      if (b.classList.contains('heading-block')){
+        // 既に見出しなら解除
+        b.classList.remove('heading-block');
+      } else {
+        // 見出しにする(インデントは解除)
+        b.classList.remove('indent-1-block','indent-2-block');
+        b.classList.add('heading-block');
+      }
+    });
+  }
+
+  // 太字ボタン:選択範囲をmark-boldでラップ
+  function applyBold(){
+    const editor = getEditor();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed){
+      alert('太字にしたい部分を選択してから押してください。');
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)){
+      alert('本文エリア内で選択してください。');
+      return;
+    }
+    let parent = range.commonAncestorContainer;
+    if (parent.nodeType === Node.TEXT_NODE) parent = parent.parentNode;
+    if (parent.closest && parent.closest('.mark-bold')){
+      alert('既に太字になっている部分です。');
+      return;
+    }
+    if (!sel.toString().trim()){
+      alert('空白以外の文字を選択してください。');
+      return;
+    }
+    const span = document.createElement('span');
+    span.className = 'mark-bold';
+    span.setAttribute('data-type', 'bold');
+    try {
+      range.surroundContents(span);
+    } catch(e) {
+      const frag = range.extractContents();
+      span.appendChild(frag);
+      range.insertNode(span);
+    }
+    sel.removeAllRanges();
+    attachBoldClickHandlers();
+  }
+
+  // 太字解除ボタン
+  function removeBold(){
+    const editor = getEditor();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0){
+      alert('解除したい太字を選択してから押してください。');
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)){
+      alert('本文エリア内で選択してください。');
+      return;
+    }
+    if (sel.isCollapsed){
+      let node = range.startContainer;
+      if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+      const mark = node.closest && node.closest('.mark-bold');
+      if (mark) unwrapMark(mark);
+      return;
+    }
+    const marks = editor.querySelectorAll('.mark-bold');
+    const toUnwrap = [];
+    marks.forEach(m => { if (range.intersectsNode(m)) toUnwrap.push(m); });
+    if (toUnwrap.length === 0){
+      alert('選択範囲に太字が見つかりません。');
+      return;
+    }
+    toUnwrap.forEach(unwrapMark);
+    sel.removeAllRanges();
+  }
+
+  function attachBoldClickHandlers(){
+    document.querySelectorAll('#gui-editor .mark-bold').forEach(el => {
+      el.onclick = (e) => {
+        if (window.getSelection().toString().length > 0) return;
+        if (confirm('この太字を解除しますか?')) {
+          unwrapMark(el);
+        }
+      };
+    });
+  }
+
   function insertPageBreak(){
     const editor = getEditor();
     const sel = window.getSelection();
@@ -1201,6 +1374,7 @@
       guiEditor.innerHTML = textToEditorHtml(textEditor.value);
       attachMarkClickHandlers();
       attachPageBreakHandlers();
+      attachBoldClickHandlers();
       textEditor.style.display = 'none';
       guiEditor.style.display = '';
     }
@@ -1222,6 +1396,7 @@
     document.getElementById('text-editor').value = text || '';
     attachMarkClickHandlers();
     attachPageBreakHandlers();
+    attachBoldClickHandlers();
     resetCounters();
   }
 
@@ -1374,6 +1549,18 @@
   document.getElementById('btn-unmask').addEventListener('click', () => {
     if (state.editorMode !== 'gui') syncEditorMode('gui');
     unmaskSelection();
+  });
+  document.getElementById('btn-heading').addEventListener('click', () => {
+    if (state.editorMode !== 'gui') syncEditorMode('gui');
+    toggleHeading();
+  });
+  document.getElementById('btn-bold').addEventListener('click', () => {
+    if (state.editorMode !== 'gui') syncEditorMode('gui');
+    applyBold();
+  });
+  document.getElementById('btn-unbold').addEventListener('click', () => {
+    if (state.editorMode !== 'gui') syncEditorMode('gui');
+    removeBold();
   });
   document.getElementById('btn-page-break').addEventListener('click', () => {
     if (state.editorMode !== 'gui') syncEditorMode('gui');
