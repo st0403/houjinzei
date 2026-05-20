@@ -117,6 +117,15 @@
   }
   .paper .indent-1 { padding-left: 14px; display: block; margin: 2px 0; }
   .paper .indent-2 { padding-left: 28px; display: block; margin: 2px 0; }
+  .paper div {
+    /* 番号付き行の折り返し対応 */
+    text-indent: 0;
+    padding-left: 0;
+  }
+  .paper div.has-number {
+    text-indent: -2.5em;
+    padding-left: 2.5em;
+  }
 
   .page-footer {
     margin-top: 24px;
@@ -786,6 +795,9 @@
       if (content.startsWith(IND1_PREFIX)){ cls = 'indent-1'; content = content.slice(IND1_PREFIX.length); }
       else if (content.startsWith(IND2_PREFIX)){ cls = 'indent-2'; content = content.slice(IND2_PREFIX.length); }
 
+      // 番号で始まるかチェック(全角数字+ピリオド、括弧数字、丸数字、イロハ)
+      const hasNumber = /^([１-９][0-9]*\.|[(（][0-9]+[)）]|[①-⑳]|[イロハニホヘトチリヌルヲワカヨタレソツネナラムウヰノオクヤマケフコエテアサキユメミシヱヒモセス])\s/.test(content);
+
       let s = escapeHtml(content);
       s = s.replace(/\{\{([\s\S]*?)\}\}/g, (m, inner) => {
         const txt = inner.trim();
@@ -801,8 +813,12 @@
         return '<span class="mask" data-mask="1">' + inner + '</span>';
       });
 
-      if (cls){
-        html += '<div class="' + cls + '">' + (s || '&nbsp;') + '</div>';
+      let divClass = cls;
+      if (hasNumber && !cls) divClass = 'has-number';
+      else if (hasNumber && cls) divClass = cls + ' has-number';
+
+      if (divClass){
+        html += '<div class="' + divClass + '">' + (s || '&nbsp;') + '</div>';
       } else {
         html += '<div>' + (s || '&nbsp;') + '</div>';
       }
@@ -1095,27 +1111,38 @@
   function insertNumberMarker(kind){
     const editor = getEditor();
     editor.focus();
-    const block = getCurrentBlock();
+    let block = getCurrentBlock();
+    
+    // 最初の行(空のエディタ)の場合、新しいdivを作成
     if (!block){
-      alert('本文エリアにカーソルを置いてください。');
-      return;
+      const newDiv = document.createElement('div');
+      newDiv.setAttribute('data-block', '1');
+      newDiv.innerHTML = '<br>';
+      if (editor.childNodes.length === 0 || (editor.childNodes.length === 1 && editor.firstChild.tagName === 'BR')){
+        editor.innerHTML = '';
+        editor.appendChild(newDiv);
+      } else {
+        editor.insertBefore(newDiv, editor.firstChild);
+      }
+      block = newDiv;
     }
+    
     let prefix = '';
     if (kind === 'zenkaku'){
       const n = state.counters.zenkaku;
-      prefix = ZENKAKU[n] || String(n + 1);
+      prefix = (ZENKAKU[n] || String(n + 1)) + '. '; // ピリオド+半角スペース
       state.counters.zenkaku++;
     } else if (kind === 'paren'){
       state.counters.paren++;
-      prefix = '(' + state.counters.paren + ')';
+      prefix = '(' + state.counters.paren + ') '; // 半角スペース
     } else if (kind === 'maru'){
-      prefix = MARU[state.counters.maru % MARU.length];
+      prefix = MARU[state.counters.maru % MARU.length] + ' '; // 半角スペース
       state.counters.maru++;
     } else if (kind === 'iroha'){
-      prefix = IROHA[state.counters.iroha % IROHA.length];
+      prefix = IROHA[state.counters.iroha % IROHA.length] + ' '; // 半角スペース
       state.counters.iroha++;
     }
-    const text = prefix + ' ';
+    
     const sel = window.getSelection();
     const range = document.createRange();
     range.setStart(block, 0);
@@ -1123,7 +1150,7 @@
     if (block.childNodes.length === 1 && block.firstChild.tagName === 'BR'){
       block.removeChild(block.firstChild);
     }
-    const node = document.createTextNode(text);
+    const node = document.createTextNode(prefix);
     range.insertNode(node);
     const newRange = document.createRange();
     newRange.setStartAfter(node);
