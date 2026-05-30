@@ -16,7 +16,7 @@
     color: #2a2a28;
     line-height: 1.7;
   }
-  .container { max-width: 650px; margin: 0 auto; }
+  .container { max-width: 760px; margin: 0 auto; }
   h1 {
     font-size: 20px;
     font-weight: 500;
@@ -276,6 +276,9 @@
     border-bottom: none;
     border-radius: 6px 6px 0 0;
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
   .gui-toolbar button {
     font-size: 12px;
@@ -391,6 +394,42 @@
     line-height: 24px;
   }
 
+  /* Box group in paper display */
+  .paper .box-group {
+    border: 1px dashed #888780;
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-radius: 2px;
+  }
+
+  /* Box markers in editor */
+  .gui-editor .box-marker {
+    display: block;
+    height: 22px;
+    margin: 2px 0;
+    text-align: center;
+    user-select: none;
+    font-size: 11px;
+    color: #6b6961;
+    line-height: 22px;
+    cursor: pointer;
+  }
+  .gui-editor .box-start-marker {
+    border-top: 1px dashed #888780;
+    border-left: 1px dashed #888780;
+    border-right: 1px dashed #888780;
+    border-radius: 2px 2px 0 0;
+  }
+  .gui-editor .box-start-marker::before { content: "┌─ 囲み ─"; }
+  .gui-editor .box-end-marker {
+    border-bottom: 1px dashed #888780;
+    border-left: 1px dashed #888780;
+    border-right: 1px dashed #888780;
+    border-radius: 0 0 2px 2px;
+  }
+  .gui-editor .box-end-marker::before { content: "─ 囲み ─┘"; }
+  .gui-toolbar .btn-box { border-color: #888780; }
+
   .mode-toggle {
     display: inline-flex;
     border: 1px solid #d8d3c4;
@@ -493,6 +532,45 @@
     .paper { padding: 16px 18px; font-size: 15px; }
     .gui-toolbar button { font-size: 11px; padding: 4px 8px; }
   }
+  .theory-chip {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    border: 1px solid #d8d3c4;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    color: #2a2a28;
+    font-family: inherit;
+    transition: background 0.12s;
+  }
+  .theory-chip:hover { background: #f5f3ed; }
+  .theory-chip.active { background: #e8443a; color: #fff; border-color: #e8443a; }
+
+  /* Edit list chips */
+  .edit-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border: 1px solid #d8d3c4;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 12px;
+    color: #2a2a28;
+  }
+  .edit-chip .chip-title {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 2px;
+  }
+  .edit-chip .chip-title:hover { color: #e8443a; }
 
   @media print {
     .tabs, .toolbar, .nav, #panel-edit, #panel-data { display: none !important; }
@@ -500,6 +578,153 @@
     .paper { border: none; page-break-after: always; }
     .mask { background: transparent !important; color: transparent !important; border-bottom: 1px solid #ccc; }
   }
+
+  /* ===== LAYOUT: サイドバー ===== */
+  .app-layout {
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+    position: relative;
+  }
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fdfbf5;
+    border: 1px solid #d8d3c4;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: width 0.25s ease, opacity 0.25s ease;
+    margin-right: 16px;
+  }
+  .sidebar.collapsed {
+    width: 0;
+    opacity: 0;
+    margin-right: 0;
+    border-width: 0;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #d8d3c4;
+    font-size: 13px;
+    font-weight: 500;
+    color: #2a2a28;
+  }
+  .sidebar-list {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+  .sidebar-list::-webkit-scrollbar { width: 4px; }
+  .sidebar-list::-webkit-scrollbar-thumb { background: #d8d3c4; border-radius: 2px; }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #2a2a28;
+    border-left: 3px solid transparent;
+    transition: background 0.1s;
+    line-height: 1.4;
+  }
+  .sidebar-item:hover { background: #f5f3ed; }
+  .sidebar-item.active {
+    background: #fff5f5;
+    border-left-color: #e8443a;
+    color: #c93c30;
+    font-weight: 500;
+  }
+  .sidebar-rank {
+    flex-shrink: 0;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: #e8443a;
+    color: #fff;
+    font-weight: 500;
+  }
+  .sidebar-rank.b { background: #1e7fc4; }
+  .sidebar-rank.c { background: #888780; }
+  .sidebar-title-text { flex: 1; }
+  .main-content { flex: 1; min-width: 0; }
+
+  /* ハンバーガーボタン */
+  .btn-sidebar-toggle {
+    background: #fff;
+    border: 1px solid #d8d3c4;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    color: #2a2a28;
+    flex-shrink: 0;
+  }
+  .btn-sidebar-toggle:hover { background: #f5f3ed; }
+
+  /* 編集サイドバー */
+  .edit-layout {
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+  }
+  .edit-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fdfbf5;
+    border: 1px solid #d8d3c4;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: width 0.25s ease, opacity 0.25s ease;
+    margin-right: 16px;
+  }
+  .edit-sidebar.collapsed {
+    width: 0;
+    opacity: 0;
+    margin-right: 0;
+    border-width: 0;
+  }
+  .edit-sidebar-list {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+  .edit-sidebar-list::-webkit-scrollbar { width: 4px; }
+  .edit-sidebar-list::-webkit-scrollbar-thumb { background: #d8d3c4; border-radius: 2px; }
+  .edit-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #2a2a28;
+    border-left: 3px solid transparent;
+  }
+  .edit-sidebar-item:hover { background: #f5f3ed; }
+  .edit-sidebar-item.active { background: #fff5f5; border-left-color: #e8443a; }
+  .edit-sidebar-actions {
+    display: flex;
+    gap: 3px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .edit-sidebar-actions button {
+    padding: 2px 5px;
+    font-size: 11px;
+  }
+  .edit-main { flex: 1; min-width: 0; }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 220px; }
+    .edit-sidebar { width: 200px; }
+  }
+
 </style>
 </head>
 <body>
@@ -515,7 +740,8 @@
   <!-- STUDY -->
   <div class="panel active" id="panel-study">
     <div class="toolbar">
-      <label>ランク</label>
+      <button class="btn-sidebar-toggle" id="btn-toggle-study-sidebar" title="一覧を開閉">☰</button>
+      <label style="margin-left:4px;">ランク</label>
       <select id="filter-rank">
         <option value="all">全て</option>
         <option value="A" selected>A</option>
@@ -535,29 +761,64 @@
       <button id="btn-shuffle">シャッフル</button>
     </div>
 
-    <div class="paper" id="display">
-      <div class="empty">理論が登録されていません。<br>「編集」タブから追加するか、「データ管理」タブからファイルを読み込んでください。</div>
-    </div>
+    <div class="app-layout">
+      <!-- サイドバー -->
+      <div class="sidebar" id="study-sidebar">
+        <div class="sidebar-header">
+          <span>理論一覧</span>
+          <span id="study-sidebar-count" style="font-size:11px; color:#6b6961;"></span>
+        </div>
+        <div class="sidebar-list" id="study-sidebar-list"></div>
+      </div>
 
-    <div class="nav">
-      <div class="nav-group">
-        <button id="btn-prev-theory" title="前の理論へ">⏮ 前の理論</button>
-        <button id="btn-prev-page" title="前のページへ">← ページ</button>
-      </div>
-      <div class="nav-group">
-        <span class="counter" id="counter">0 / 0</span>
-        <span class="nav-divider"></span>
-        <span class="page-counter" id="page-counter">- / -</span>
-      </div>
-      <div class="nav-group">
-        <button id="btn-next-page" title="次のページへ">ページ →</button>
-        <button id="btn-next-theory" title="次の理論へ">次の理論 ⏭</button>
+      <!-- メインコンテンツ -->
+      <div class="main-content">
+        <div class="paper" id="display">
+          <div class="empty">理論が登録されていません。<br>「編集」タブから追加するか、「データ管理」タブからファイルを読み込んでください。</div>
+        </div>
+
+        <div class="nav">
+          <div class="nav-group">
+            <button id="btn-prev-theory" title="前の理論へ">⏮ 前の理論</button>
+            <button id="btn-prev-page" title="前のページへ">← ページ</button>
+          </div>
+          <div class="nav-group">
+            <span class="counter" id="counter">0 / 0</span>
+            <span class="nav-divider"></span>
+            <span class="page-counter" id="page-counter">- / -</span>
+          </div>
+          <div class="nav-group">
+            <button id="btn-next-page" title="次のページへ">ページ →</button>
+            <button id="btn-next-theory" title="次の理論へ">次の理論 ⏭</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- EDIT -->
   <div class="panel" id="panel-edit">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <button class="btn-sidebar-toggle" id="btn-toggle-edit-sidebar" title="一覧を開閉">☰</button>
+      <span style="font-size:14px; font-weight:500; color:#1a1a18;">編集</span>
+      <span id="list-count" style="font-size:12px; color:#888780;"></span>
+    </div>
+    <div class="edit-layout">
+      <!-- 編集サイドバー -->
+      <div class="edit-sidebar" id="edit-sidebar">
+        <div class="sidebar-header">
+          <span>登録済み一覧</span>
+          <div style="display:flex;gap:4px;">
+            <button id="btn-select-mode" style="font-size:11px; padding:2px 7px;">一括削除</button>
+            <button id="btn-delete-selected" class="btn-danger" style="font-size:11px; padding:2px 7px; display:none;">削除</button>
+            <button id="btn-cancel-select" style="font-size:11px; padding:2px 7px; display:none;">取消</button>
+          </div>
+        </div>
+        <div class="edit-sidebar-list" id="list"></div>
+      </div>
+
+      <!-- 編集メイン -->
+      <div class="edit-main">
     <div class="help">
       <strong>編集機能</strong><br>
       ■ <strong>マスク</strong>:選択 → 「キーワード」「文ごと」<br>
@@ -570,7 +831,7 @@
 
     <div class="field">
       <label>タイトル</label>
-      <input id="edit-title" type="text" placeholder="例:益金の額">
+      <input id="edit-title" type="text" placeholder="例:課税の対象">
     </div>
     <div class="field" style="max-width:200px;">
       <label>ランク</label>
@@ -602,6 +863,7 @@
         <button class="btn-struct" id="btn-indent-out" title="インデントを減らす">←</button>
         <span class="group-divider"></span>
         <button class="btn-page-break" id="btn-page-break">改ページ</button>
+        <button class="btn-box" id="btn-box">囲む</button>
         <span class="spacer"></span>
         <div class="mode-toggle">
           <button id="mode-gui" class="active">GUI</button>
@@ -624,10 +886,8 @@
       <div class="paper" id="preview-paper"></div>
     </div>
 
-    <div style="margin-top: 24px;">
-      <div style="font-size:13px; color:#6b6961; margin-bottom:8px;">登録済み一覧</div>
-      <div id="list"></div>
-    </div>
+      </div><!-- /edit-main -->
+    </div><!-- /edit-layout -->
   </div>
 
   <!-- DATA -->
@@ -637,7 +897,7 @@
       ① <strong>「ファイルに書き出す」</strong>でJSONファイルをダウンロード<br>
       ② ダウンロードしたファイルを<strong>iCloud Drive・Google Drive・Dropbox等</strong>の同期フォルダに置く<br>
       ③ もう一方の端末で<strong>「ファイルから読み込む」</strong>を押し、同じファイルを選択<br>
-      <div class="tip">💡 推奨ファイル名:<code>tax_theory.json</code>。常に同じ名前を上書き保存していけば、最新版を同期できます。</div>
+      <div class="tip">💡 推奨ファイル名:<code>consumption_tax_theory.json</code>。常に同じ名前を上書き保存していけば、最新版を同期できます。</div>
       <div class="tip">💡 編集や保存をするたびに、現在のデータは自動的にブラウザに保存されます(localStorage)。書き出しは「他の端末と共有したいとき」だけ実行すればOKです。</div>
     </div>
 
@@ -655,7 +915,7 @@
         <input type="file" id="file-input" accept=".json,application/json" style="display:none;">
         <button class="btn-primary" id="btn-upload">📂 JSONファイルを選択して読み込む</button>
         <label style="font-size:12px; color:#6b6961; align-self:center;">
-          <input type="checkbox" id="merge-mode"> 既存データと合体(チェックなしで上書き)
+          <input type="checkbox" id="merge-mode" checked> 既存データと合体(チェックなしで上書き)
         </label>
       </div>
     </div>
@@ -683,8 +943,10 @@
 
 <script>
 (function(){
-  const STORAGE_KEY = 'tax_law_theory_master_v6';
+  const STORAGE_KEY = 'hojin_zeho_theory_master_v1';
   const PAGE_BREAK_TOKEN = '<<<PAGEBREAK>>>';
+  const BOX_START_TOKEN = '<<<BOXSTART>>>';
+  const BOX_END_TOKEN = '<<<BOXEND>>>';
   const IND1_PREFIX = '#I1# ';
   const IND2_PREFIX = '#I2# ';
   const IND3_PREFIX = '#I3# ';
@@ -703,7 +965,8 @@
     editorMode: 'gui',
     counters: { zenkaku: 0, paren: 0, maru: 0, iroha: 0 },
     lastSavedAt: null,
-    dirty: false
+    dirty: false,
+    selectMode: false
   };
 
   const IROHA = ['イ','ロ','ハ','ニ','ホ','ヘ','ト','チ','リ','ヌ','ル','ヲ','ワ','カ','ヨ','タ','レ','ソ','ツ','ネ','ナ','ラ','ム','ウ','ヰ','ノ','オ','ク','ヤ','マ','ケ','フ','コ','エ','テ','ア','サ','キ','ユ','メ','ミ','シ','ヱ','ヒ','モ','セ','ス'];
@@ -712,14 +975,14 @@
 
   const SAMPLE = [
     {
-      title: '【サンプル】受取配当等の益金不算入(架空)',
+      title: '【サンプル】課税の対象(架空)',
       rank: 'A',
-      body: '１ 制度の概要\n内国法人が他の[[内国法人]]から受ける[[配当等の額]]のうち、一定のものは、各事業年度の所得の金額の計算上、[[益金の額]]に算入しない。\n２ 益金不算入額\n(1) 株式等の区分に応じた不算入割合\n配当等の額は、その元本となる株式等の区分に応じて、次のとおり益金不算入額を計算する。\n#I1# ① [[完全子法人株式等]]…配当等の額の全額\n#I1# ② [[関連法人株式等]]…配当等の額から負債利子相当額を控除した金額\n#I1# ③ [[その他の株式等]]…配当等の額の[[100分の50]]\n#I1# ④ [[非支配目的株式等]]…配当等の額の[[100分の20]]\n<<<PAGEBREAK>>>\n(2) 株式等の区分の定義\n#I1# イ [[完全子法人株式等]]とは、配当等の額の計算期間を通じて[[100%]]の株式等を保有するものをいう。\n#I1# ロ [[関連法人株式等]]とは、計算期間を通じて[[3分の1超]]の株式等を保有するものをいう。\n#I1# ハ [[非支配目的株式等]]とは、配当等の額の支払基準日において[[5%以下]]の株式等を保有するものをいう。\n#I1# ニ その他の株式等とは、上記イからハまでに該当しないものをいう。\n３ 趣旨\n{{この規定は、法人段階で課税済みの利益が配当として支払われる際に再度課税されることによる二重課税を排除する趣旨に基づくものである。}}'
+      body: '#H# 課税の対象\n１ 国内取引\n[[国内]]において[[事業者]]が行った[[資産の譲渡等]]及び[[特定仕入れ]]には、消費税を課する。\n２ 資産の譲渡等の意義\n「資産の譲渡等」とは、事業として[[対価を得て]]行われる次のものをいう。\n#I1# ① [[資産の譲渡]]\n#I1# ② [[資産の貸付け]]\n#I1# ③ [[役務の提供]]\n３ 課税の対象となる4要件\n次の[[４つの要件]]をすべて満たすものが課税の対象となる。\n#I1# ① [[国内]]において行われること\n#I1# ② [[事業者]]が事業として行うものであること\n#I1# ③ [[対価を得て]]行われるものであること\n#I1# ④ [[資産の譲渡等]]に該当すること\n<<<PAGEBREAK>>>\n４ 輸入取引\n{{保税地域から引き取られる外国貨物には、消費税を課する。}}\n５ 趣旨\n{{消費税は、消費一般に広く公平に負担を求める観点から設けられた税であり、税の累積を排除するために仕入税額控除の仕組みが設けられている。}}'
     },
     {
-      title: '【サンプル】役員給与の損金不算入(架空)',
+      title: '【サンプル】仕入税額控除(架空)',
       rank: 'A',
-      body: '１ 原則\n内国法人がその役員に対して支給する[[給与]](退職給与等を除く)のうち、次のいずれにも該当しないものは、[[損金の額]]に算入しない。\n#I1# ① [[定期同額給与]]\n#I1# ② [[事前確定届出給与]]\n#I1# ③ [[業績連動給与]]\n２ 損金不算入となる例外\n(1) 不相当に高額な部分\n#I1# イ [[実質基準]]…職務の内容、収益の状況等に照らして相当でない部分\n#I1# ロ [[形式基準]]…定款・株主総会等で定めた支給限度額を超える部分\n(2) 隠蔽又は仮装による支給\n{{事実を隠蔽し、又は仮装して経理することにより支給する給与は、全額を損金の額に算入しない。}}'
+      body: '#H# 仕入税額控除\n１ 意義\n事業者が、国内において[[課税仕入れ]]を行った場合には、その課税仕入れを行った日の属する課税期間の[[課税標準額に対する消費税額]]から、課税仕入れ等の税額の合計額を控除する。\n２ 課税仕入れの意義\n「課税仕入れ」とは、事業者が、事業として他の者から[[資産を譲り受け]]、若しくは[[借り受け]]、又は[[役務の提供を受ける]]こと(非課税となるものを除く)をいう。\n３ 控除の方式\n(1) [[個別対応方式]]\n課税仕入れ等を次の3つに区分して計算する方式。\n#I1# イ [[課税売上げにのみ要するもの]]…全額控除\n#I1# ロ [[非課税売上げにのみ要するもの]]…控除不可\n#I1# ハ [[課税・非課税共通して要するもの]]…課税売上割合を乗じた額を控除\n(2) [[一括比例配分方式]]\n{{課税仕入れ等の税額の合計額に課税売上割合を乗じて計算する方式。いったん採用したら2年間は継続適用しなければならない。}}'
     }
   ];
 
@@ -763,7 +1026,7 @@
   }
 
   function splitPages(body){
-    return body.split(PAGE_BREAK_TOKEN).map(s => s.replace(/^\n+|\n+$/g, ''));
+    return body.split(PAGE_BREAK_TOKEN).map(s => s.replace(/^\n+/, '').replace(/\n$/, ''));
   }
 
   function inlineMarks(s){
@@ -781,6 +1044,14 @@
     for (const line of lines){
       if (line === PB_MARK){
         html += '<div class="page-break" data-type="pb" contenteditable="false">\u200B</div>';
+        continue;
+      }
+      if (line === BOX_START_TOKEN){
+        html += '<div class="box-start-marker box-marker" data-type="bxs" contenteditable="false">\u200B</div>';
+        continue;
+      }
+      if (line === BOX_END_TOKEN){
+        html += '<div class="box-end-marker box-marker" data-type="bxe" contenteditable="false">\u200B</div>';
         continue;
       }
       let cls = '';
@@ -849,6 +1120,14 @@
           lines.push(PAGE_BREAK_TOKEN);
           continue;
         }
+        if (child.classList && child.classList.contains('box-start-marker')){
+          lines.push(BOX_START_TOKEN);
+          continue;
+        }
+        if (child.classList && child.classList.contains('box-end-marker')){
+          lines.push(BOX_END_TOKEN);
+          continue;
+        }
         if (child.tagName === 'DIV'){
           let prefix = '';
           if (child.classList.contains('heading-block')) prefix = HEADING_PREFIX;
@@ -877,7 +1156,10 @@
   function renderPageBody(pageText, mode){
     const lines = pageText.split('\n');
     let html = '';
+    let inBox = false;
     for (const line of lines){
+      if (line === BOX_START_TOKEN){ html += '<div class="box-group">'; inBox = true; continue; }
+      if (line === BOX_END_TOKEN){ if (inBox){ html += '</div>'; inBox = false; } continue; }
       let cls = '';
       let isHeading = false;
       let content = line;
@@ -942,6 +1224,7 @@
         }
       }
     }
+    if (inBox) html += '</div>';
     return html;
   }
 
@@ -988,34 +1271,113 @@
     display.querySelectorAll('[data-mask]').forEach(el => {
       el.addEventListener('click', () => el.classList.toggle('shown'));
     });
+
+    if (animate) window.scrollTo({top: 0, behavior: 'smooth'});
+    // サイドバーのアクティブ状態を更新
+    const sidebarList = document.getElementById('study-sidebar-list');
+    if (sidebarList) {
+      sidebarList.querySelectorAll('.sidebar-item').forEach((item, i) => {
+        item.classList.toggle('active', i === state.currentIdx);
+      });
+      const activeItem = sidebarList.querySelector('.sidebar-item.active');
+      if (activeItem) activeItem.scrollIntoView({ block: 'nearest' });
+    }
   }
 
   function renderList(){
     const wrap = document.getElementById('list');
+    const countEl = document.getElementById('list-count');
+    if (countEl) countEl.textContent = state.items.length + '件';
+    if (!wrap) return;
     if (state.items.length === 0){
-      wrap.innerHTML = '<div style="font-size:13px; color:#888780; padding:8px;">まだ登録がありません。</div>';
+      wrap.innerHTML = '<div style="font-size:12px; color:#888780; padding:10px 14px;">まだ登録がありません。</div>';
       return;
     }
-    wrap.innerHTML = state.items.map(item => {
-      const pageCount = splitPages(item.body).length;
-      const pageLabel = pageCount > 1 ? ' <span style="color:#888780; font-size:11px;">(' + pageCount + 'p)</span>' : '';
-      return '<div class="list-item">' +
-        '<div class="title">' + escapeHtml(item.title) + '<span class="rank-pill">' + item.rank + '</span>' + pageLabel + '</div>' +
-        '<button data-edit="' + item.id + '">編集</button>' +
-        '<button data-delete="' + item.id + '">削除</button>' +
+    let listHtml = '';
+    state.items.forEach((item, idx) => {
+      const isFirst = idx === 0, isLast = idx === state.items.length - 1;
+      const rankCls = item.rank === 'B' ? ' b' : item.rank === 'C' ? ' c' : '';
+      const isEditing = state.editingId === item.id;
+      const checkbox = state.selectMode
+        ? '<input type="checkbox" class="chip-check" data-id="' + item.id + '" style="margin:0 4px 0 0; flex-shrink:0;">'
+        : '';
+      const actions = state.selectMode ? '' :
+        '<div class="edit-sidebar-actions">' +
+        '<button data-up="' + item.id + '"' + (isFirst ? ' disabled' : '') + '>▲</button>' +
+        '<button data-down="' + item.id + '"' + (isLast ? ' disabled' : '') + '>▼</button>' +
+        '<button data-edit-id="' + item.id + '">編集</button>' +
+        '<button data-delete="' + item.id + '" style="color:#c93c30;">×</button>' +
         '</div>';
-    }).join('');
-    wrap.querySelectorAll('[data-edit]').forEach(b => {
-      b.addEventListener('click', () => editItem(b.dataset.edit));
+      listHtml += '<div class="edit-sidebar-item' + (isEditing ? ' active' : '') + '" data-id="' + item.id + '">' +
+        checkbox +
+        '<span class="sidebar-rank' + rankCls + '">' + item.rank + '</span>' +
+        '<span style="flex:1; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" data-edit-id="' + item.id + '">' + escapeHtml(item.title) + '</span>' +
+        actions + '</div>';
     });
-    wrap.querySelectorAll('[data-delete]').forEach(b => {
-      b.addEventListener('click', () => deleteItem(b.dataset.delete));
+    wrap.innerHTML = listHtml;
+    wrap.querySelectorAll('[data-edit-id]').forEach(el => el.addEventListener('click', () => editItem(el.dataset.editId)));
+    wrap.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', () => moveItem(b.dataset.up, 'up')));
+    wrap.querySelectorAll('[data-down]').forEach(b => b.addEventListener('click', () => moveItem(b.dataset.down, 'down')));
+    wrap.querySelectorAll('[data-delete]').forEach(b => b.addEventListener('click', () => deleteItem(b.dataset.delete)));
+    wrap.querySelectorAll('.chip-check').forEach(cb => cb.addEventListener('change', updateDeleteSelectedBtn));
+  }
+
+  function updateDeleteSelectedBtn(){
+    const count = document.querySelectorAll('#list .chip-check:checked').length;
+    const btn = document.getElementById('btn-delete-selected');
+    if (btn) btn.textContent = '削除する' + (count > 0 ? ' (' + count + ')' : '');
+  }
+
+  function toggleSelectMode(on){
+    state.selectMode = on;
+    const btnMode = document.getElementById('btn-select-mode');
+    const btnDel = document.getElementById('btn-delete-selected');
+    const btnCancel = document.getElementById('btn-cancel-select');
+    if (btnMode) btnMode.style.display = on ? 'none' : '';
+    if (btnDel) { btnDel.style.display = on ? '' : 'none'; btnDel.textContent = '削除する'; }
+    if (btnCancel) btnCancel.style.display = on ? '' : 'none';
+    renderList();
+  }
+
+  function deleteSelected(){
+    const ids = Array.from(document.querySelectorAll('#list .chip-check:checked')).map(cb => cb.dataset.id);
+    if (ids.length === 0){ alert('削除する項目を選択してください'); return; }
+    if (!confirm(ids.length + '件を削除しますか?')) return;
+    state.items = state.items.filter(i => !ids.includes(i.id));
+    toggleSelectMode(false);
+    save(); renderTheorySelect(); updateSyncStatus();
+  }
+
+  function renderTheorySelect(){
+    // 学習サイドバー
+    const sidebarList = document.getElementById('study-sidebar-list');
+    const countEl = document.getElementById('study-sidebar-count');
+    if (!sidebarList) return;
+    const list = filtered();
+    if (countEl) countEl.textContent = list.length + '件';
+    sidebarList.innerHTML = '';
+    list.forEach((item, i) => {
+      const div = document.createElement('div');
+      const rankCls = item.rank === 'B' ? ' b' : item.rank === 'C' ? ' c' : '';
+      div.className = 'sidebar-item' + (i === state.currentIdx ? ' active' : '');
+      div.innerHTML = '<span class="sidebar-rank' + rankCls + '">' + item.rank + '</span>' +
+                      '<span class="sidebar-title-text">' + escapeHtml(item.title) + '</span>';
+      div.addEventListener('click', () => {
+        state.currentIdx = i;
+        state.currentPage = 0;
+        renderStudy(true);
+      });
+      sidebarList.appendChild(div);
     });
+    // アクティブ項目をスクロール
+    const activeItem = sidebarList.querySelector('.sidebar-item.active');
+    if (activeItem) activeItem.scrollIntoView({ block: 'nearest' });
   }
 
   function render(){
     renderStudy();
     renderList();
+    renderTheorySelect();
     updateSyncStatus();
   }
 
@@ -1087,10 +1449,14 @@
     if (!editor.contains(range.commonAncestorContainer)) return [];
     const blocks = [];
     Array.from(editor.children).forEach(child => {
-      if (child.tagName === 'DIV' && !child.classList.contains('page-break')){
+      if (child.tagName === 'DIV' && !child.classList.contains('page-break') && !child.classList.contains('box-marker')){
         if (range.intersectsNode(child)) blocks.push(child);
       }
     });
+    if (blocks.length === 0 && range.collapsed) {
+      const b = getCurrentBlock();
+      if (b) blocks.push(b);
+    }
     return blocks;
   }
 
@@ -1329,6 +1695,57 @@
     });
   }
 
+  function createBoxMarkerElement(type){
+    const div = document.createElement('div');
+    div.className = (type === 'bxs' ? 'box-start-marker' : 'box-end-marker') + ' box-marker';
+    div.setAttribute('data-type', type);
+    div.setAttribute('contenteditable', 'false');
+    div.innerHTML = '​';
+    return div;
+  }
+
+  function attachBoxMarkerHandlers(){
+    document.querySelectorAll('#gui-editor .box-marker').forEach(el => {
+      el.onclick = () => {
+        const isStart = el.classList.contains('box-start-marker');
+        let pair = null;
+        if (isStart){
+          let s = el.nextElementSibling;
+          while (s){ if (s.classList.contains('box-end-marker')){ pair = s; break; } s = s.nextElementSibling; }
+        } else {
+          let s = el.previousElementSibling;
+          while (s){ if (s.classList.contains('box-start-marker')){ pair = s; break; } s = s.previousElementSibling; }
+        }
+        const msg = pair ? 'この囲みを削除しますか？(開始・終了マーカーを両方削除します)' : 'この囲みマーカーを削除しますか？';
+        if (confirm(msg)){
+          el.parentNode.removeChild(el);
+          if (pair) pair.parentNode.removeChild(pair);
+        }
+      };
+    });
+  }
+
+  function insertBox(){
+    const editor = getEditor();
+    const selected = getSelectedBlocks();
+    const startMarker = createBoxMarkerElement('bxs');
+    const endMarker = createBoxMarkerElement('bxe');
+    if (selected.length > 0){
+      selected[0].parentNode.insertBefore(startMarker, selected[0]);
+      selected[selected.length - 1].parentNode.insertBefore(endMarker, selected[selected.length - 1].nextSibling);
+    } else {
+      const block = getCurrentBlock();
+      if (block){
+        block.parentNode.insertBefore(startMarker, block);
+        block.parentNode.insertBefore(endMarker, block.nextSibling);
+      } else {
+        editor.appendChild(startMarker);
+        editor.appendChild(endMarker);
+      }
+    }
+    attachBoxMarkerHandlers();
+  }
+
   function insertNumberMarker(kind){
     const editor = getEditor();
     editor.focus();
@@ -1427,6 +1844,7 @@
       attachMarkClickHandlers();
       attachPageBreakHandlers();
       attachBoldClickHandlers();
+      attachBoxMarkerHandlers();
       textEditor.style.display = 'none';
       guiEditor.style.display = '';
     }
@@ -1449,6 +1867,7 @@
     attachMarkClickHandlers();
     attachPageBreakHandlers();
     attachBoldClickHandlers();
+    attachBoxMarkerHandlers();
     resetCounters();
   }
 
@@ -1470,6 +1889,17 @@
     if (!confirm('削除しますか?')) return;
     state.items = state.items.filter(i => i.id !== id);
     save(); render();
+  }
+
+  function moveItem(id, direction){
+    const idx = state.items.findIndex(i => i.id === id);
+    if (idx === -1) return;
+    if (direction === 'up' && idx > 0){
+      [state.items[idx - 1], state.items[idx]] = [state.items[idx], state.items[idx - 1]];
+    } else if (direction === 'down' && idx < state.items.length - 1){
+      [state.items[idx], state.items[idx + 1]] = [state.items[idx + 1], state.items[idx]];
+    }
+    save(); renderList(); renderTheorySelect();
   }
 
   function cancelEdit(){
@@ -1507,7 +1937,7 @@
     const ts = date.getFullYear() + ('0'+(date.getMonth()+1)).slice(-2) + ('0'+date.getDate()).slice(-2) +
                 '_' + ('0'+date.getHours()).slice(-2) + ('0'+date.getMinutes()).slice(-2);
     a.href = url;
-    a.download = 'tax_theory_' + ts + '.json';
+    a.download = 'hojin_zeho_theory_' + ts + '.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1560,8 +1990,14 @@
     state.filterRank = e.target.value;
     state.currentIdx = 0;
     state.currentPage = 0;
+    renderTheorySelect();
     renderStudy();
   });
+
+  document.getElementById('btn-select-mode').addEventListener('click', () => toggleSelectMode(true));
+  document.getElementById('btn-delete-selected').addEventListener('click', deleteSelected);
+  document.getElementById('btn-cancel-select').addEventListener('click', () => toggleSelectMode(false));
+
   document.getElementById('mask-mode').addEventListener('change', e => {
     state.maskMode = e.target.value;
     renderStudy();
@@ -1588,6 +2024,16 @@
     if (document.activeElement && ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
     if (e.key === 'ArrowRight') { goNextPage(); e.preventDefault(); }
     else if (e.key === 'ArrowLeft') { goPrevPage(); e.preventDefault(); }
+  });
+
+  // ツールバーボタン押下時にエディタのフォーカス(カーソル位置)を維持する
+  document.querySelector('.gui-toolbar').addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) e.preventDefault();
+  });
+
+  document.getElementById('btn-box').addEventListener('click', () => {
+    if (state.editorMode !== 'gui') syncEditorMode('gui');
+    insertBox();
   });
 
   document.getElementById('btn-mask-kw').addEventListener('click', () => {
@@ -1747,6 +2193,26 @@
   // Warn before leaving with unsaved file export
   window.addEventListener('beforeunload', (e) => {
     // Don't block — localStorage保存はされているので、ファイル書き出し未実行は警告のみ
+  });
+
+
+  // サイドバー開閉
+  (function(){
+    const studySidebarOpen = localStorage.getItem('study_sidebar_open');
+    const editSidebarOpen = localStorage.getItem('edit_sidebar_open');
+    if (studySidebarOpen === 'false') document.getElementById('study-sidebar').classList.add('collapsed');
+    if (editSidebarOpen === 'false') document.getElementById('edit-sidebar').classList.add('collapsed');
+  })();
+
+  document.getElementById('btn-toggle-study-sidebar').addEventListener('click', () => {
+    const sb = document.getElementById('study-sidebar');
+    sb.classList.toggle('collapsed');
+    localStorage.setItem('study_sidebar_open', !sb.classList.contains('collapsed'));
+  });
+  document.getElementById('btn-toggle-edit-sidebar').addEventListener('click', () => {
+    const sb = document.getElementById('edit-sidebar');
+    sb.classList.toggle('collapsed');
+    localStorage.setItem('edit_sidebar_open', !sb.classList.contains('collapsed'));
   });
 
   // Init
